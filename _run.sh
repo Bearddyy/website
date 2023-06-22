@@ -1,1 +1,1 @@
-flask --app website run --host=0.0.0.0
+gunicorn website:app
