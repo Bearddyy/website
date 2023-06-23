@@ -1,5 +1,7 @@
 from flask import Flask
+from flask import send_file
 import requests
+
 
 app = Flask(__name__)
 
@@ -13,6 +15,7 @@ def hello_world():
 @app.route("/image/<int:width>/<int:height>")
 def image(width, height):
     # use https://picsum.photos/ to get an image
-    response = requests.get(f"https://picsum.photos/{width}/{height}?grayscale")
-    # provide the image in the response
-    return response.content
+    response = requests.get(f"https://picsum.photos/{width}/{height}?grayscale", stream=True)
+
+    # send the image back to the user
+    return send_file(response.raw, mimetype="image/jpeg")
