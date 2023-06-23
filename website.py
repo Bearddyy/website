@@ -18,4 +18,4 @@ def image(width, height):
     response = requests.get(f"https://picsum.photos/{width}/{height}?grayscale", stream=True)
 
     # return the image in binary in the .content field
-    return send_file(response.raw, mimetype="image/jpeg")
+    return send_file(response.raw, mimetype="image/png")
