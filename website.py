@@ -1,7 +1,7 @@
 from flask import Flask
 from flask import send_file
 import requests
-
+from PIL import Image
 
 app = Flask(__name__)
 
@@ -16,6 +16,12 @@ def hello_world():
 def image(width, height):
     # use https://picsum.photos/ to get an image
     response = requests.get(f"https://picsum.photos/{width}/{height}?grayscale", stream=True)
+
+    #if the image is jpeg, convert it to png
+    if response.headers['Content-Type'] == 'image/jpeg':
+        img = Image.open(response.raw)
+        img.save("image.png")
+        response.raw = open("image.png", "rb")
 
     # return the image in binary in the .content field
     return send_file(response.raw, mimetype="image/png")
