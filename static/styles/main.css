@@ -28,11 +28,11 @@ body {
   position: relative; 
   margin: auto;
   top: 338px;
-  left: 40%;
+  left: max(400px,40%);
   text-align: left;
-  font-family: Inter;
+  font-family: 'Overpass Mono';
   font-weight: Regular;
-  font-size: 16px;
+  font-size: 1vmax;
   opacity: 1;
   overflow: hidden;
 }
