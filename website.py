@@ -3,18 +3,37 @@ from flask import send_file
 from flask import render_template
 import requests
 from PIL import Image
+import os
 
 app = Flask(__name__)
 
+FONT_PATH = "https://fonts.googleapis.com/css?family=Inter|Libre+Barcode+39+Text|Overpass+Mono:wght@700&display=swap"
+
 @app.route("/")
 def root():
-    return render_template("index.html")
+    return render_template("index.html", font_path=FONT_PATH)
 
+@app.route("/projects/<string:project>")
+def projects(project):
+    #strip the project name of any slashes and other characters
+    project = project.replace("/", "")
+    project = project.replace("\\", "")
+    project = project + ".html"
+    # if project is not in the list of projects, return the error page
+    if project not in os.listdir("templates/projects"):
+        print(f"project {project} not found in {os.listdir('templates/projects')}")
+        return page_not_found(project, " not found")
+    else:
+        return render_template("projects/" + project, font_path=FONT_PATH)
 
+@app.route("/ascention")
+def ascention():
+    return render_template("ascention.html", font_path=FONT_PATH)
 
 # route for get requests for an image with width and height
 @app.route("/image/<int:width>/<int:height>")
 def image(width, height):
+    print(f"width: {width}, height: {height}")
     # use https://picsum.photos/ to get an image
     response = requests.get(f"https://picsum.photos/{width}/{height}?grayscale", stream=True)
 
@@ -34,3 +53,22 @@ def image(width, height):
     
     # return the image in binary in the .content field
     return send_file(response.raw, mimetype="image/png")
+
+@app.route("/log/<string:id>", methods=["POST", "GET"])
+def log(id):
+    if request.method == "POST":
+        # create a new log with the id and the data
+        return "POST", 200
+    elif request.method == "GET":
+        # return the log with the id
+        return "GET", 200
+
+@app.route("/log/list/<string:id>", methods=["GET"])
+def log_list(id):
+    # return a list of all the logs currently stored
+    return str(os.listdir()), 200
+
+#fallback route returns not found page
+@app.errorhandler(404)
+def page_not_found(e, extra_text=""):
+    return render_template("error.html", error=e, extra_text=extra_text, font_path=FONT_PATH), 200
