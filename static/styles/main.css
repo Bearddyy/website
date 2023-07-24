@@ -35,11 +35,20 @@ a:active { text-decoration: none; }
   line-height: 1em;
 }
 
+.globeImage {
+  position: fixed;
+  left: 36%;
+  top: 30%;
+  width: 60vw;
+  width: 60vh;
+  opacity: 1;
+}
+
 .logo {
   position: fixed !important;
   z-index: 999;
   top: 10vh !important;
-  left: 10vw !important;
+  left: 5vw !important;
   font-family: 'Libre Barcode 39 Text';
   font-weight: Regular;
   font-size: min(6vh,4vw);
@@ -51,15 +60,29 @@ a:active { text-decoration: none; }
 .centre_image {
   position: relative;
   top: 100px;
-  left: min(800px,30%);
+  left: 27%;
+}
+
+.centre_image_caption {
+  position: relative;
+  top: 100px;
+  left: 27%;
+  width: 30%;
+  text-align: left;
+  font-family: 'Overpass Mono';
+  font-weight: Regular;
+  font-size: 1vmax;
+  opacity: 1;
+  word-wrap: break-word;
+  overflow: wrap;
 }
 
 .centre_text {
   position: relative; 
   display: block;
   top: 338px;
-  left: min(800px,40%);
-  width: 40%;
+  left: 40%;
+  width: 30%;
   text-align: left;
   font-family: 'Overpass Mono';
   font-weight: Regular;
@@ -90,7 +113,6 @@ a:active { text-decoration: none; }
   -o-animation: 1.2s blink step-end infinite;
   animation: 1.2s blink step-end infinite;
 }
-
 
 @keyframes "blink" {
   from, to {
