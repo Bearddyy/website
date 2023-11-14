@@ -4,6 +4,8 @@ from flask import render_template
 import requests
 from PIL import Image
 import os
+import random
+import numpy as np
 
 app = Flask(__name__)
 
@@ -67,6 +69,37 @@ def log(id):
 def log_list(id):
     # return a list of all the logs currently stored
     return str(os.listdir()), 200
+
+@app.route("/julia/<int:width>/<int:height>")
+def julia(width, height):
+    print(f"width: {width}, height: {height}")
+    width = int(width)
+    height = int(height)
+    ratio = width / height
+    c = complex(random.uniform(-0.1, 0.1), random.uniform(0.65, 0.75))
+    n = 50
+    x_min = -0.5 * ratio
+    x_max = 0.5 * ratio
+    y_min = -0.5 * (1/ratio)
+    y_max = 0.5 * (1/ratio)
+
+
+    x = np.linspace(x_min, x_max, width)
+    y = np.linspace(y_min, y_max, height)
+    z = x + y[:, None] * 1j
+    image = np.zeros((height, width))
+    for k in range(n):
+        z = z**2 + c
+        mask = (np.abs(z) > 2) & (image == 0)
+        image[mask] = k
+        z[mask] = np.nan
+    image = np.log(image + 1)
+    image[np.isnan(image)] = 0
+    image = image / np.nanmax(image)
+    image = np.uint8(image * 255)
+    img = Image.fromarray(image)
+    img.save("julia.png")
+    return send_file("julia.png", mimetype="image/png")
 
 #fallback route returns not found page
 @app.errorhandler(404)
