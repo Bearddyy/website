@@ -11,6 +11,8 @@ jobs:
       - name: Trigger Deploy
         env:
           RENDER_TOKEN: ${{ secrets.RENDER_TOKEN }}
+          TEST: 'test'
         run: |
           echo "Triggering Deploy to Render"
+          echo $test
           wget https://api.render.com/deploy/github/$RENDER_TOKEN > /dev/null 
