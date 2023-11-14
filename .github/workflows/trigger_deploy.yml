@@ -1,0 +1,11 @@
+name: Trigger Automatic Deploy
+run-name: ${{ github.actor }} Triggered Deplot 🚀
+on:
+  push:
+    branches:
+      - main
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: wget https://api.render.com/deploy/{{env.RENDER_DEPLOY_TOKEN}} > /dev/null
