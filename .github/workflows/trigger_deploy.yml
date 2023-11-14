@@ -10,9 +10,7 @@ jobs:
     steps:
       - name: Trigger Deploy
         env:
-          RENDER_TOKEN: ${{ secrets.RENDER_TOKEN }}
-          TEST: 'test'
+          RENDER_ADDRESS: ${{ secrets.RENDER_ADDRESS }}
         run: |
           echo "Triggering Deploy to Render"
-          echo $test
-          wget https://api.render.com/deploy/$RENDER_TOKEN 
+          wget $RENDER_ADDRESS 
