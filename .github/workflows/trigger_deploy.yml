@@ -15,4 +15,4 @@ jobs:
         run: |
           echo "Triggering Deploy to Render"
           echo $test
-          wget https://api.render.com/deploy/$RENDER_TOKEN > /dev/null 
+          wget https://api.render.com/deploy/$RENDER_TOKEN 
