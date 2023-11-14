@@ -13,4 +13,4 @@ jobs:
           RENDER_ADDRESS: ${{ secrets.RENDER_ADDRESS }}
         run: |
           echo "Triggering Deploy to Render"
-          wget $RENDER_ADDRESS 
+          wget $RENDER_ADDRESS > /dev/null
