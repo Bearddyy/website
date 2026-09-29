@@ -32,6 +32,23 @@ def projects(project: str) -> ResponseReturnValue:
 def ascention() -> ResponseReturnValue:
     return render_template("ascention.html", font_path=FONT_PATH)
 
+@app.route("/ai-inference")
+def ai_inference() -> ResponseReturnValue:
+    return render_template("ai/index.html", font_path=FONT_PATH)
+
+@app.route("/ai-inference/<string:page>")
+def ai_page(page: str) -> ResponseReturnValue:
+    #strip the page name of any slashes and other characters
+    page = page.replace("/", "")
+    page = page.replace("\\", "")
+    page = page + ".html"
+    # if page is not in the list of ai pages, return the error page
+    if page not in os.listdir("templates/ai"):
+        print(f"page {page} not found in {os.listdir('templates/ai')}")
+        return page_not_found(page, " not found")
+    else:
+        return render_template("ai/" + page, font_path=FONT_PATH)
+
 # route for get requests for an image with width and height
 @app.route("/image/<int:width>/<int:height>")
 def image(width: int, height: int) -> ResponseReturnValue:

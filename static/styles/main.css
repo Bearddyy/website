@@ -26,13 +26,17 @@ a:active { text-decoration: none; }
   position: fixed;
   z-index: 999;
   float: right;
-  text-align: right;
+  text-align: left;
   top: 10vh;
   right: 2vw;
   font-family: 'Overpass Mono';
   font-weight: Bold;
   font-size: min(1vw,2vh);
   line-height: 1em;
+}
+
+.nav_sub {
+  margin-left: 2em;
 }
 
 .globeImage {
