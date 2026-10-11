@@ -1,15 +1,16 @@
-from flask import Flask
-from flask import send_file
-from flask import render_template
-from flask.typing import ResponseReturnValue
-import requests
-from PIL import Image
+"""Flask app for the personal website: pages, images, and AI benchmark charts."""
+
+import csv
+import io
+import os
+
 import plotly.graph_objects as go
+import requests
+from flask import Flask, render_template, send_file
+from flask.typing import ResponseReturnValue
+from PIL import Image
 from plotly.basedatatypes import BaseFigure
 from plotly.io import to_html
-import csv
-import os
-import io
 
 app = Flask(__name__)
 
@@ -112,9 +113,7 @@ def load_bench_rows(csv_path: str) -> list[dict[str, str]]:
         for row in rows
         if row.get("model")
         and not row.get("error")
-        and not any(
-            sub in row["model"] for sub in EXCLUDED_MODEL_SUBSTRINGS
-        )
+        and not any(sub in row["model"] for sub in EXCLUDED_MODEL_SUBSTRINGS)
     ]
 
 
@@ -141,56 +140,65 @@ def make_bench_fig(
             x=values,
             y=models,
             orientation="h",
-            marker=dict(color=ACCENT_COLOR, line=dict(color=INK_COLOR, width=0.5)),
+            marker={
+                "color": ACCENT_COLOR,
+                "line": {"color": INK_COLOR, "width": 0.5},
+            },
             text=[f"{value:g}" for value in values],
             textposition="outside",
-            textfont=dict(color=INK_COLOR, size=12),
+            textfont={"color": INK_COLOR, "size": 12},
             hovertemplate="%{y}<br>%{x:g}<extra></extra>",
         )
     )
     fig.update_layout(
-        title=dict(text=title, font=dict(color=INK_COLOR, size=20)),
+        title={"text": title, "font": {"color": INK_COLOR, "size": 20}},
         template=None,
         paper_bgcolor=BG_COLOR,
         plot_bgcolor=BG_COLOR,
-        font=dict(color=INK_COLOR, family="Electrolize"),
-        margin=dict(l=170, r=80, t=60, b=70),
+        font={"color": INK_COLOR, "family": "Electrolize"},
+        margin={"l": 170, "r": 80, "t": 60, "b": 70},
         height=max(300, 120 + 42 * len(models)),
-        xaxis=dict(
-            title=dict(text=axis_label, font=dict(color=INK_COLOR, size=15)),
-            gridcolor=GRID_COLOR,
-            zerolinecolor=INK_COLOR,
-            tickfont=dict(color=INK_COLOR),
-            range=[0, max(values) * 1.18] if values else None,
-        ),
-        yaxis=dict(tickfont=dict(color=INK_COLOR, size=13)),
+        xaxis={
+            "title": {"text": axis_label, "font": {"color": INK_COLOR, "size": 15}},
+            "gridcolor": GRID_COLOR,
+            "zerolinecolor": INK_COLOR,
+            "tickfont": {"color": INK_COLOR},
+            "range": [0, max(values) * 1.18] if values else None,
+        },
+        yaxis={"tickfont": {"color": INK_COLOR, "size": 13}},
     )
     return fig
 
+
 @app.route("/")
 def root() -> ResponseReturnValue:
+    """Serve the site index page."""
     return render_template("index.html", font_path=FONT_PATH)
+
 
 @app.route("/projects/<string:project>")
 def projects(project: str) -> ResponseReturnValue:
-    #strip the project name of any slashes and other characters
-    project = project.replace("/", "")
-    project = project.replace("\\", "")
-    project = project + ".html"
+    """Serve a project page, or the error page when it does not exist."""
+    # strip the project name of any slashes and other characters
+    project = project.replace("/", "").replace("\\", "") + ".html"
     # if project is not in the list of projects, return the error page
     if project not in os.listdir("templates/projects"):
         print(f"project {project} not found in {os.listdir('templates/projects')}")
         return page_not_found(project, " not found")
-    else:
-        return render_template("projects/" + project, font_path=FONT_PATH)
+    return render_template("projects/" + project, font_path=FONT_PATH)
+
 
 @app.route("/ascention")
 def ascention() -> ResponseReturnValue:
+    """Serve the ascention page."""
     return render_template("ascention.html", font_path=FONT_PATH)
+
 
 @app.route("/ai-inference")
 def ai_inference() -> ResponseReturnValue:
+    """Serve the AI inference landing page."""
     return render_template("ai/index.html", font_path=FONT_PATH)
+
 
 @app.route("/ai-inference/benchmarks")
 def benchmarks() -> ResponseReturnValue:
@@ -216,8 +224,11 @@ def benchmarks() -> ResponseReturnValue:
                     full_html=False,
                     default_width="100%",
                     default_height=f"{fig.layout.height}px",
-                    config={"displaylogo": False, "responsive": True,
-                            "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
+                    config={
+                        "displaylogo": False,
+                        "responsive": True,
+                        "modeBarButtonsToRemove": ["lasso2d", "select2d"],
+                    },
                 ),
                 BENCH_EXPLANATIONS[col],
             )
@@ -231,25 +242,28 @@ def benchmarks() -> ResponseReturnValue:
         font_path=FONT_PATH,
     )
 
+
 @app.route("/ai-inference/<string:page>")
 def ai_page(page: str) -> ResponseReturnValue:
-    #strip the page name of any slashes and other characters
-    page = page.replace("/", "")
-    page = page.replace("\\", "")
-    page = page + ".html"
+    """Serve an AI inference subpage, or the error page when it does not exist."""
+    # strip the page name of any slashes and other characters
+    page = page.replace("/", "").replace("\\", "") + ".html"
     # if page is not in the list of ai pages, return the error page
     if page not in os.listdir("templates/ai"):
         print(f"page {page} not found in {os.listdir('templates/ai')}")
         return page_not_found(page, " not found")
-    else:
-        return render_template("ai/" + page, font_path=FONT_PATH)
+    return render_template("ai/" + page, font_path=FONT_PATH)
+
 
 # route for get requests for an image with width and height
 @app.route("/image/<int:width>/<int:height>")
 def image(width: int, height: int) -> ResponseReturnValue:
+    """Fetch a grayscale photo from picsum and return it as a PNG."""
     print(f"width: {width}, height: {height}")
     # use https://picsum.photos/ to get an image
-    response = requests.get(f"https://picsum.photos/{width}/{height}?grayscale")
+    response = requests.get(
+        f"https://picsum.photos/{width}/{height}?grayscale", timeout=30
+    )
 
     # convert the image to grayscale png
     with Image.open(io.BytesIO(response.content)) as img:
@@ -258,7 +272,14 @@ def image(width: int, height: int) -> ResponseReturnValue:
     # return the image as png
     return send_file("image.png", mimetype="image/png")
 
-#fallback route returns not found page
+
+# fallback route returns not found page
 @app.errorhandler(404)
 def page_not_found(e: object, extra_text: str = "") -> tuple[str, int]:
-    return render_template("error.html", error=e, extra_text=extra_text, font_path=FONT_PATH), 200
+    """Render the error page for missing routes."""
+    return (
+        render_template(
+            "error.html", error=e, extra_text=extra_text, font_path=FONT_PATH
+        ),
+        200,
+    )
