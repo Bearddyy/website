@@ -39,6 +39,56 @@ a:active { text-decoration: none; }
   margin-left: 2em;
 }
 
+/* Blog-style explainer above the benchmark charts. Normal flow (no top
+   offset) so the alternating chart/explanation blocks stack correctly;
+   the preceding .centre_text offset provides the initial clearance. */
+.blog {
+  position: relative;
+  left: 40%;
+  width: 40%;
+  /* .centre_text above is position:relative so it does not push flow;
+     this margin clears its visual offset. */
+  margin-top: 420px;
+  font-family: 'Overpass Mono';
+  font-weight: Regular;
+  font-size: 1vmax;
+  word-wrap: break-word;
+}
+
+.blog_heading {
+  font-size: 2.2vmax;
+  font-weight: Bold;
+  color: #f48c06;
+  margin: 2em 0 0.6em 0;
+}
+
+.blog_text {
+  margin: 0 0 1em 0;
+  line-height: 1.6em;
+}
+
+/* Explanation paragraph under each chart, aligned with the chart column. */
+.blog_narrow {
+  left: 18vw;
+  width: 55vw;
+  margin-top: 30px;
+}
+
+.chart {
+  position: relative;
+  left: 18vw;
+  width: 55vw;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+/* The global * background rule also paints SVG elements in Chromium,
+   so the topmost Plotly layers would cover the bars with a dark rect.
+   Keep every element inside a chart transparent instead. */
+.chart * {
+  background: transparent;
+}
+
 .globeImage {
   position: fixed;
   left: 36%;

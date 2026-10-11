@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link href={{ font_path }} rel="stylesheet" />
+    <link href="{{ url_for('static',filename='styles/main.css') }}" rel="stylesheet" />
+    <script src="{{ url_for('static',filename='js/plotly.min.js') }}"></script>
+    <title>NULL PTR</title>
+</head>
+
+<body>
+
+    <span class="logo"><a href="/">NULL PTR</a></span>
+    {% include "_nav.html" %}
+
+    <span class="centre_text">
+        <b>BENCHMARKS //</b>
+        <p class="tabbed_text">local inference performance on the strix halo.</p>
+        <p class="tabbed_text">run of {{ run_date }} &mdash; {{ model_count }} models<span class="blinking-cursor">|</span></p>
+    </span>
+
+    <div class="blog">
+        <h2 class="blog_heading">## TLDR</h2>
+        <p class="blog_text">
+            For strix halo, the current best to use is Qwen 3.8 flash next,
+            run with either gufo (open source) or halogen. If you want full
+            context usage (256k) without losing much quality in the quant, go
+            with Q4. Qwen 3.8 27B may be the best on memory constrained
+            systems, but that is not the constraint on a strix halo machine
+            and it being a mixture of experts, specifically with less active
+            parameters means youll enjoy much faster token generation.
+        </p>
+
+        <h2 class="blog_heading">## BENCHMARKS</h2>
+    </div>
+
+    {% for chart, explanation in charts %}
+    <div class="chart">
+        {{ chart | safe }}
+    </div>
+    <div class="blog blog_narrow">
+        <p class="blog_text">{{ explanation }}</p>
+    </div>
+    {% endfor %}
+
+    <div class="blog">
+        <h2 class="blog_heading">## WHAT TO OPTIMISE FOR</h2>
+        <p class="blog_text">
+            My main use for this box is agentic work, and that changes which
+            numbers matter. An agent is not one long chat, it is hundreds of
+            short rounds: read the conversation, call a tool, read the
+            result, call another tool. The prompt grows every round and gets
+            reread every round, so prompt processing dominates the day. A
+            model that prefills at 1400 tokens per second finishes a 30k
+            token context in well under a minute while the dense 27B needs
+            over two, and you pay that tax on every single step.
+        </p>
+        <p class="blog_text">
+            So the ranking I settled on for agents: prompt processing first,
+            generation speed second, time to first token a distant third,
+            load time only if you swap models as often as I do. The MoE flash
+            next model wins the first two outright, and with MTP speculative
+            decoding on gufo the generation numbers climb further for free.
+            Halogen is the one to chase if you want the same weights loading
+            in under a second between tasks.
+        </p>
+        <p class="blog_text">
+            The dense 27B still has a job. It is the better pure reasoner per
+            parameter and it fits in half the memory, so on a smaller box it
+            is the right call. On 128GB of unified memory there is no reason
+            to compromise, run the biggest MoE that fits at 4 bit and let the
+            bandwidth do the rest.
+        </p>
+    </div>
+    <p class="bottomText">bottom text</p>
+</body>
+
+</html>
