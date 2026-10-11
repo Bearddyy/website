@@ -1,11 +1,52 @@
+:root {
+  /* Fixed left rail (logo above, nav below). The article column is cleared
+     by the body padding, so pages need no per-page left offsets. */
+  --rail-w: clamp(180px, 20vw, 300px);
+  --pad-x: 3vw;
+  --pad-top: 4vh;
+  --logo-h: min(6vh, 4vw);
+  --content-max: 1200px;
+  /* Rail top doubles as the article top, so copy starts level with the
+     "\ PROJECTS" heading instead of at the top of the viewport. */
+  --rail-top: calc(var(--pad-top) + var(--logo-h) + 5vh);
+  --font-body: 'Electrolize', sans-serif;
+  /* Aged computer case theme: sun-yellowed beige case, Model M charcoal ink
+     (7.8:1), a near-black barcode logo, and two brick reds — --accent-dark
+     (#7F3A2E, 5.4:1) for the nav, headings and <b> labels, --accent (#A33F2D,
+     4.2:1, the palette's `red`) for warnings and chart bars. Grey-brown
+     bright-black covers grid lines and faint text. Kept in sync with the
+     *_COLOR constants in website.py. */
+  --bg: #d9d1ba;
+  --fg: #3a3733;
+  --accent: #a33f2d;
+  --accent-dark: #7f3a2e;
+  --muted: #6b675d;
+  --logo-ink: #2e2c29;
+}
+
 * {
-  background: rgba(30,30,30,1);
-  color: #FFFFFF;
+  background: var(--bg);
+  color: var(--fg);
   max-width: 100% !important;
 }
+
+/* The theme's selection pair. */
+::selection {
+  background: #bfb59a;
+  color: var(--fg);
+}
+
 body {
+  /* Base face for everything; only .logo overrides to the barcode font. */
+  font-family: var(--font-body);
   font-size: 14px;
   overflow-x: hidden;
+  margin: 0;
+  /* border-box keeps the global `max-width: 100% !important` from adding the
+     rail padding on top of a full-width box and overflowing to the right. */
+  box-sizing: border-box;
+  padding: var(--rail-top) var(--pad-x) 12vh
+    calc(var(--rail-w) + var(--pad-x) * 2);
 }
 .tabbed_text {
   margin-left: 50px;
@@ -22,34 +63,33 @@ a:hover { text-decoration: none; }
 
 a:active { text-decoration: none; }
 
-.right_bar {
+/* Logo and nav are fixed to the viewport, so they stay put while the article
+   scrolls underneath them. */
+.side_nav {
   position: fixed;
   z-index: 999;
-  float: right;
+  top: var(--rail-top);
+  left: var(--pad-x);
+  width: var(--rail-w);
   text-align: left;
-  top: 10vh;
-  right: 2vw;
-  font-family: 'Overpass Mono';
+  font-family: var(--font-body);
   font-weight: Bold;
-  font-size: min(1vw,2vh);
-  line-height: 1em;
+  font-size: clamp(11px, 1.05vw, 17px);
+  line-height: 1.9em;
+}
+
+.side_nav p {
+  margin: 0;
 }
 
 .nav_sub {
   margin-left: 2em;
 }
 
-/* Blog-style explainer above the benchmark charts. Normal flow (no top
-   offset) so the alternating chart/explanation blocks stack correctly;
-   the preceding .centre_text offset provides the initial clearance. */
+/* Blog-style explainer blocks: normal flow inside the content column. */
 .blog {
-  position: relative;
-  left: 40%;
-  width: 40%;
-  /* .centre_text above is position:relative so it does not push flow;
-     this margin clears its visual offset. */
-  margin-top: 420px;
-  font-family: 'Overpass Mono';
+  width: min(100%, var(--content-max));
+  font-family: var(--font-body);
   font-weight: Regular;
   font-size: 1vmax;
   word-wrap: break-word;
@@ -58,8 +98,18 @@ a:active { text-decoration: none; }
 .blog_heading {
   font-size: 2.2vmax;
   font-weight: Bold;
-  color: #f48c06;
+  color: var(--accent-dark);
+  /* The underline keeps the brighter red, so headings read two-tone. */
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 0.15em;
   margin: 2em 0 0.6em 0;
+}
+
+/* Field labels ("Exception Raised:", "BENCHMARKS //") are title text, so they
+   take the heading red. The global * rule colours <b> directly, which is why
+   this needs its own selector instead of inheriting. */
+b {
+  color: var(--accent-dark);
 }
 
 .blog_text {
@@ -67,19 +117,11 @@ a:active { text-decoration: none; }
   line-height: 1.6em;
 }
 
-/* Explanation paragraph under each chart, aligned with the chart column. */
-.blog_narrow {
-  left: 18vw;
-  width: 55vw;
-  margin-top: 30px;
-}
-
 .chart {
-  position: relative;
-  left: 18vw;
-  width: 55vw;
+  width: min(100%, var(--content-max));
   margin-top: 20px;
   margin-bottom: 20px;
+  /* Charts sit on the page background, like a terminal readout. */
 }
 
 /* The global * background rule also paints SVG elements in Chromium,
@@ -101,57 +143,61 @@ a:active { text-decoration: none; }
 .logo {
   position: fixed !important;
   z-index: 999;
-  top: 10vh !important;
-  left: 5vw !important;
+  top: var(--pad-top) !important;
+  left: var(--pad-x) !important;
   font-family: 'Libre Barcode 39 Text';
   font-weight: Regular;
-  font-size: min(6vh,4vw);
+  font-size: var(--logo-h);
   opacity: 1;
   text-align: left;
   overflow: visible;
 }
 
+/* The barcode logo is near-black; the nav rail stays dark brick red. The
+   global * rule colours every element directly, so the inner <a> and <p> need
+   the colour restated rather than inherited. */
+.logo,
+.logo a {
+  color: var(--logo-ink);
+}
+
+.side_nav,
+.side_nav * {
+  color: var(--accent-dark);
+}
+
 .centre_image {
-  position: relative;
-  top: 100px;
-  left: 27%;
+  display: block;
+  margin: 0 0 12px 0;
 }
 
 .centre_image_caption {
-  position: relative;
-  top: 100px;
-  left: 27%;
-  width: 30%;
+  width: min(100%, var(--content-max));
   text-align: left;
-  font-family: 'Overpass Mono';
+  font-family: var(--font-body);
   font-weight: Regular;
   font-size: 1vmax;
   opacity: 1;
   word-wrap: break-word;
-  overflow: wrap;
 }
 
 .centre_text {
-  position: relative; 
   display: block;
-  top: 338px;
-  left: 40%;
-  width: 30%;
+  width: min(100%, var(--content-max));
   text-align: left;
-  font-family: 'Overpass Mono';
+  font-family: var(--font-body);
   font-weight: Regular;
   font-size: 1vmax;
   opacity: 1;
   word-wrap: break-word;
-  overflow: wrap;
 }
 
 .warning {
-  color: #f48c06;
+  color: var(--accent);
 }
 
 .blinking-cursor {
-  color: #FFFFFF;
+  color: var(--fg);
   -webkit-animation: 1.2s blink step-end infinite;
   -moz-animation: 1.2s blink step-end infinite;
   -ms-animation: 1.2s blink step-end infinite;
@@ -160,7 +206,7 @@ a:active { text-decoration: none; }
 }
 
 .blinking-warning {
-  color: #f48c06;
+  color: var(--accent);
   -webkit-animation: 1.2s blink step-end infinite;
   -moz-animation: 1.2s blink step-end infinite;
   -ms-animation: 1.2s blink step-end infinite;
@@ -173,7 +219,7 @@ a:active { text-decoration: none; }
     color: transparent;
   }
   50% {
-    color: #f48c06;
+    color: var(--accent);
   }
 }
 
@@ -182,7 +228,7 @@ a:active { text-decoration: none; }
     color: transparent;
   }
   50% {
-    color: #f48c06;
+    color: var(--accent);
   }
 }
 
@@ -191,7 +237,7 @@ a:active { text-decoration: none; }
     color: transparent;
   }
   50% {
-    color: #f48c06;
+    color: var(--accent);
   }
 }
 
@@ -200,7 +246,7 @@ a:active { text-decoration: none; }
     color: transparent;
   }
   50% {
-    color: #f48c06;
+    color: var(--accent);
   }
 }
 
@@ -209,7 +255,7 @@ a:active { text-decoration: none; }
     color: transparent;
   }
   50% {
-    color: #f48c06;
+    color: var(--accent);
   }
 }
 
@@ -218,5 +264,5 @@ a:active { text-decoration: none; }
   top: 9999px;
   text-align: center;
   font-size: 12px;
-  color: rgba(250,250,250,0.5);
+  color: var(--muted);
 }

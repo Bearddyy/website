@@ -13,12 +13,15 @@ import io
 
 app = Flask(__name__)
 
-FONT_PATH = "https://fonts.googleapis.com/css?family=Inter|Libre+Barcode+39+Text|Overpass+Mono:wght@700&display=swap"
+FONT_PATH = "https://fonts.googleapis.com/css?family=Electrolize|Libre+Barcode+39+Text&display=swap"
 
-# Chart theme, kept in sync with static/styles/main.css.
-BG_COLOR = "#1e1e1e"  # page background (matches the site-wide * background)
-FG_COLOR = "#FFFFFF"  # text, ticks, bar outlines
-ACCENT_COLOR = "#f48c06"  # site accent orange, used for axis titles only
+# Chart theme, kept in sync with the --bg/--fg/--accent/--muted tokens in
+# static/styles/main.css (aged beige). Charts sit on the page background rather
+# than a separate panel, so no extra surface colour is needed.
+BG_COLOR = "#d9d1ba"  # aged beige, matches the site-wide * background
+INK_COLOR = "#3a3733"  # warm charcoal: text, ticks, bar outlines
+ACCENT_COLOR = "#a33f2d"  # palette red: bar fill
+GRID_COLOR = "rgba(107, 103, 93, 0.45)"  # bright black, for the x grid
 
 # Benchmark CSV column -> (chart title, axis label) for each metric chart.
 BENCH_METRICS: dict[str, tuple[str, str]] = {
@@ -138,29 +141,29 @@ def make_bench_fig(
             x=values,
             y=models,
             orientation="h",
-            marker=dict(color=ACCENT_COLOR, line=dict(color=FG_COLOR, width=0.5)),
+            marker=dict(color=ACCENT_COLOR, line=dict(color=INK_COLOR, width=0.5)),
             text=[f"{value:g}" for value in values],
             textposition="outside",
-            textfont=dict(color=FG_COLOR, size=12),
+            textfont=dict(color=INK_COLOR, size=12),
             hovertemplate="%{y}<br>%{x:g}<extra></extra>",
         )
     )
     fig.update_layout(
-        title=dict(text=title, font=dict(color=FG_COLOR, size=20)),
+        title=dict(text=title, font=dict(color=INK_COLOR, size=20)),
         template=None,
         paper_bgcolor=BG_COLOR,
         plot_bgcolor=BG_COLOR,
-        font=dict(color=FG_COLOR, family="Overpass Mono"),
+        font=dict(color=INK_COLOR, family="Electrolize"),
         margin=dict(l=170, r=80, t=60, b=70),
         height=max(300, 120 + 42 * len(models)),
         xaxis=dict(
-            title=dict(text=axis_label, font=dict(color=ACCENT_COLOR, size=15)),
-            gridcolor="rgba(255,255,255,0.25)",
-            zerolinecolor=FG_COLOR,
-            tickfont=dict(color=FG_COLOR),
+            title=dict(text=axis_label, font=dict(color=INK_COLOR, size=15)),
+            gridcolor=GRID_COLOR,
+            zerolinecolor=INK_COLOR,
+            tickfont=dict(color=INK_COLOR),
             range=[0, max(values) * 1.18] if values else None,
         ),
-        yaxis=dict(tickfont=dict(color=FG_COLOR, size=13)),
+        yaxis=dict(tickfont=dict(color=INK_COLOR, size=13)),
     )
     return fig
 
