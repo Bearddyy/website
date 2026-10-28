@@ -260,6 +260,21 @@ def projects(project: str) -> ResponseReturnValue:
     return render_template("projects/" + project, font_path=FONT_PATH)
 
 
+@app.route("/projects/tithe-map")
+def tithe_map() -> ResponseReturnValue:
+    """Serve the standalone Stanstead Abbots tithe map page.
+
+    The page is a self-contained HTML file (the scanned map is embedded as
+    base64), so it is served straight from disk instead of through Jinja.
+    It lives in pages/ rather than templates/ for the same reason.
+    """
+    return send_from_directory(
+        os.path.join(app.root_path, "pages"),
+        "tithe-map.html",
+        max_age=86400,
+    )
+
+
 @app.route("/ascention")
 def ascention() -> ResponseReturnValue:
     """Serve the ascention page."""
