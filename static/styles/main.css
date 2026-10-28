@@ -350,3 +350,19 @@ b {
   height: auto;
   cursor: zoom-out;
 }
+
+/* Tithe map page: the viewer fills the content column right below the rail
+   top, so it gets a near-full-viewport height minus the page padding. The
+   iframe keeps its own document, so the app's pan/zoom scripts run
+   untouched inside it. */
+.tithe_frame {
+  width: min(100%, var(--content-max));
+  height: calc(100vh - var(--rail-top) - 6vh);
+  min-height: 480px;
+}
+
+.tithe_frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--muted);
+}

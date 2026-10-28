@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link href={{ font_path }} rel="stylesheet" />
+    <link href="{{ url_for('static',filename='styles/main.css') }}" rel="stylesheet" />
+    <title>NULL PTR</title>
+</head>
+
+<body>
+
+    <span class="logo"><a href="/">NULL PTR</a></span>
+    {% include "_nav.html" %}
+
+    <div class="tithe_frame">
+        <!-- The tithe map viewer is a self-contained app (scan embedded as
+             base64) served from pages/, kept out of Jinja so its own
+             scripts stay untouched. -->
+        <iframe src="/projects/tithe-map/app" title="Stanstead Abbots Tithe Map 1840"></iframe>
+    </div>
+
+    <p class="bottomText">bottom text</p>
+
+</body>
+
+</html>

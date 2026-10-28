@@ -260,17 +260,18 @@ def projects(project: str) -> ResponseReturnValue:
     return render_template("projects/" + project, font_path=FONT_PATH)
 
 
-@app.route("/projects/tithe-map")
-def tithe_map() -> ResponseReturnValue:
-    """Serve the standalone Stanstead Abbots tithe map page.
+@app.route("/projects/tithe-map/app")
+def tithe_map_app() -> ResponseReturnValue:
+    """Serve the raw tithe map viewer for the page's iframe.
 
-    The page is a self-contained HTML file (the scanned map is embedded as
-    base64), so it is served straight from disk instead of through Jinja.
-    It lives in pages/ rather than templates/ for the same reason.
+    The viewer is a self-contained HTML file (the scanned map is embedded
+    as base64), so it is served straight from disk instead of through
+    Jinja. The wrapper page at /projects/tithe-map shows it alongside the
+    site navigation.
     """
     return send_from_directory(
         os.path.join(app.root_path, "pages"),
-        "tithe-map.html",
+        "tithe-map-app.html",
         max_age=86400,
     )
 
