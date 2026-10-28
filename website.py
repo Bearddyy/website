@@ -1,14 +1,23 @@
 """Flask app for the personal website: pages, images, and AI benchmark charts."""
 
 import csv
+import hmac
 import io
 import os
+import re
 
 import plotly.graph_objects as go
 import requests
-from flask import Flask, render_template, send_file
+from flask import (
+    Flask,
+    jsonify,
+    render_template,
+    request,
+    send_file,
+    send_from_directory,
+)
 from flask.typing import ResponseReturnValue
-from PIL import Image
+from PIL import Image, ImageOps
 from plotly.basedatatypes import BaseFigure
 from plotly.io import to_html
 
@@ -23,6 +32,26 @@ BG_COLOR = "#d9d1ba"  # aged beige, matches the site-wide * background
 INK_COLOR = "#3a3733"  # warm charcoal: text, ticks, bar outlines
 ACCENT_COLOR = "#a33f2d"  # palette red: bar fill
 GRID_COLOR = "rgba(107, 103, 93, 0.45)"  # bright black, for the x grid
+
+# Photography: uploads land in data/photos (full resolution originals) and
+# data/photos/display (page-sized copies), named "<seq>-<slug>.jpg" so sorting
+# by name is sorting by upload order. The upload key lives only in the server
+# environment; the repo is public, so it must never appear in source.
+PHOTO_DIR = os.path.join(app.root_path, "data", "photos")
+PHOTO_DISPLAY_DIR = os.path.join(PHOTO_DIR, "display")
+UPLOAD_KEY_ENV = "PHOTO_UPLOAD_KEY"
+UPLOAD_HEADER = "X-Upload-Key"
+SEEN_COOKIE = "seen_up_to"
+DISPLAY_MAX_EDGE = 1600
+UPLOAD_MAX_BYTES = 40 * 1024 * 1024
+# MPO is the multi-frame JPEG variant Sony/Samsung cameras write; PIL reads
+# its first frame, so it re-encodes to plain JPEG like any other input.
+ALLOWED_UPLOAD_FORMATS: frozenset[str] = frozenset(
+    {"JPEG", "PNG", "WEBP", "TIFF", "BMP", "MPO"}
+)
+PHOTO_ID_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
+
+app.config["MAX_CONTENT_LENGTH"] = UPLOAD_MAX_BYTES
 
 # Benchmark CSV column -> (chart title, axis label) for each metric chart.
 BENCH_METRICS: dict[str, tuple[str, str]] = {
@@ -115,6 +144,49 @@ def load_bench_rows(csv_path: str) -> list[dict[str, str]]:
         and not row.get("error")
         and not any(sub in row["model"] for sub in EXCLUDED_MODEL_SUBSTRINGS)
     ]
+
+
+def slugify(name: str) -> str:
+    """Reduce an uploaded filename to a safe lowercase slug for a photo id."""
+    stem = os.path.splitext(os.path.basename(name))[0].lower()
+    slug = re.sub(r"[^a-z0-9]+", "-", stem).strip("-")[:40].rstrip("-")
+    return slug or "photo"
+
+
+def list_photo_ids() -> list[str]:
+    """Stored photo ids, newest (highest sequence) first."""
+    if not os.path.isdir(PHOTO_DIR):
+        return []
+    return sorted(
+        (
+            name[: -len(".jpg")]
+            for name in os.listdir(PHOTO_DIR)
+            if name.endswith(".jpg") and not name.endswith("_display.jpg")
+        ),
+        reverse=True,
+    )
+
+
+def photo_seq(photo_id: str) -> int:
+    """Sequence number encoded in the leading digits of a photo id."""
+    try:
+        return int(photo_id.split("-", 1)[0])
+    except ValueError:
+        return 0
+
+
+def next_photo_id(filename: str) -> str:
+    """Build the next sequential photo id from the highest id on disk."""
+    seq = max((photo_seq(stored) for stored in list_photo_ids()), default=0) + 1
+    return f"{seq:06d}-{slugify(filename)}"
+
+
+def seen_watermark(raw: str | None) -> int:
+    """Parse the seen cookie; anything unparseable means nothing has been seen."""
+    try:
+        return int(raw or "0")
+    except ValueError:
+        return 0
 
 
 def make_bench_fig(
@@ -271,6 +343,105 @@ def image(width: int, height: int) -> ResponseReturnValue:
 
     # return the image as png
     return send_file("image.png", mimetype="image/png")
+
+
+@app.route("/photography")
+def photography() -> ResponseReturnValue:
+    """Serve the photography page: newest first, unseen photos above a divider.
+
+    The seen_up_to cookie holds the highest photo sequence the visitor has
+    acknowledged with the SEEN button, so every newer photo renders in the
+    new section at the top until it is acknowledged.
+    """
+    watermark = seen_watermark(request.cookies.get(SEEN_COOKIE))
+    photo_ids = list_photo_ids()
+    photos = [
+        {"id": photo_id, "is_new": photo_seq(photo_id) > watermark}
+        for photo_id in photo_ids
+    ]
+    new_count = sum(1 for photo in photos if photo["is_new"])
+    max_seq = photo_seq(photo_ids[0]) if photo_ids else 0
+    return render_template(
+        "photography.html",
+        photos=photos,
+        new_count=new_count,
+        max_seq=max_seq,
+        seen_cookie=SEEN_COOKIE,
+        font_path=FONT_PATH,
+    )
+
+
+def photo_response(photo_id: str, display: bool) -> ResponseReturnValue:
+    """Send one stored photo file, or the error page when it is not on disk."""
+    if PHOTO_ID_RE.fullmatch(photo_id) is None:
+        return page_not_found(photo_id, " is not a valid photo id")
+    directory = PHOTO_DISPLAY_DIR if display else PHOTO_DIR
+    name = photo_id + ("_display.jpg" if display else ".jpg")
+    if not os.path.isfile(os.path.join(directory, name)):
+        return page_not_found(photo_id, " not found")
+    # Photo ids are never reused, so the copies can be cached for a year.
+    return send_from_directory(directory, name, max_age=31536000)
+
+
+@app.route("/photos/<string:photo_id>/original")
+def photo_original(photo_id: str) -> ResponseReturnValue:
+    """Serve the full resolution copy of a stored photo."""
+    return photo_response(photo_id, display=False)
+
+
+@app.route("/photos/<string:photo_id>/display")
+def photo_display(photo_id: str) -> ResponseReturnValue:
+    """Serve the page-sized copy of a stored photo."""
+    return photo_response(photo_id, display=True)
+
+
+@app.route("/photos/upload", methods=["POST"])
+def upload_photo() -> ResponseReturnValue:
+    """Store an uploaded photo, authenticated by the PHOTO_UPLOAD_KEY env var.
+
+    curl -F photo=@shot.jpg -H "X-Upload-Key: $PHOTO_UPLOAD_KEY" \\
+        https://example.com/photos/upload
+
+    The image is re-encoded to a full resolution JPEG (EXIF orientation
+    applied) plus a display-sized copy for the grid, so the originals stay
+    web-safe whatever format they were shot in.
+    """
+    key = os.environ.get(UPLOAD_KEY_ENV, "")
+    if not key:
+        return jsonify(error=f"uploads disabled: {UPLOAD_KEY_ENV} is not set"), 503
+    if not hmac.compare_digest(request.headers.get(UPLOAD_HEADER, ""), key):
+        return jsonify(error="invalid upload key"), 401
+    upload = request.files.get("photo")
+    if upload is None or not upload.filename:
+        return jsonify(error="send the image as multipart field 'photo'"), 400
+    try:
+        with Image.open(upload.stream) as probe:
+            image_format = probe.format
+            probe.verify()
+    except OSError:
+        return jsonify(error="not a readable image file"), 400
+    if image_format not in ALLOWED_UPLOAD_FORMATS:
+        return jsonify(error=f"unsupported image format: {image_format}"), 400
+    upload.stream.seek(0)
+    with Image.open(upload.stream) as raw:
+        original = ImageOps.exif_transpose(raw).convert("RGB")
+    photo_id = next_photo_id(upload.filename)
+    os.makedirs(PHOTO_DISPLAY_DIR, exist_ok=True)
+    original.save(
+        os.path.join(PHOTO_DIR, photo_id + ".jpg"),
+        format="JPEG",
+        quality=92,
+        optimize=True,
+    )
+    display = original.copy()
+    display.thumbnail((DISPLAY_MAX_EDGE, DISPLAY_MAX_EDGE))
+    display.save(
+        os.path.join(PHOTO_DISPLAY_DIR, photo_id + "_display.jpg"),
+        format="JPEG",
+        quality=85,
+        optimize=True,
+    )
+    return jsonify(id=photo_id), 201
 
 
 # fallback route returns not found page

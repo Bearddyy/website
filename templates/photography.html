@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link href={{ font_path }} rel="stylesheet" />
+    <link href="{{ url_for('static',filename='styles/main.css') }}" rel="stylesheet" />
+    <title>NULL PTR</title>
+</head>
+
+<body>
+
+    <span class="logo"><a href="/">NULL PTR</a></span>
+    {% include "_nav.html" %}
+
+    <div class="photo_controls">
+        <button class="photo_button" id="seen_button" type="button" title="mark every photo as seen">SEEN</button>
+        <button class="photo_button" id="clear_button" type="button" title="clear your seen history">CLEAR</button>
+    </div>
+
+    {% if photos %}
+    <div class="photo_grid">
+        {% for photo in photos %}
+        {% if loop.index0 == new_count and new_count > 0 %}
+        <div class="photo_divider"><span>\ SEEN</span></div>
+        {% endif %}
+        <a class="photo_link" href="/photos/{{ photo.id }}/original">
+            <img class="photo" src="/photos/{{ photo.id }}/display" alt="{{ photo.id }}" loading="lazy" />
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <span class="centre_text">
+        <b>PHOTOGRAPHY //</b>
+        <p class="tabbed_text">no photos yet<span class="blinking-cursor">|</span></p>
+    </span>
+    {% endif %}
+
+    <div class="lightbox" id="lightbox">
+        <img class="lightbox_img" id="lightbox_img" alt="" />
+    </div>
+
+    <p class="bottomText">bottom text</p>
+
+    <script>
+        const MAX_SEQ = {{ max_seq }};
+
+        function setCookie(name, value, maxAge) {
+            document.cookie = name + "=" + value + ";path=/;max-age=" + maxAge + ";samesite=lax";
+        }
+
+        document.getElementById("seen_button").addEventListener("click", () => {
+            setCookie("{{ seen_cookie }}", String(MAX_SEQ), 31536000);
+            location.reload();
+        });
+
+        document.getElementById("clear_button").addEventListener("click", () => {
+            setCookie("{{ seen_cookie }}", "", 0);
+            location.reload();
+        });
+
+        const lightbox = document.getElementById("lightbox");
+        const lightboxImg = document.getElementById("lightbox_img");
+
+        function closeLightbox() {
+            lightbox.classList.remove("open");
+            lightboxImg.removeAttribute("src");
+        }
+
+        document.querySelectorAll("a.photo_link").forEach((link) => {
+            link.addEventListener("click", (event) => {
+                event.preventDefault();
+                lightboxImg.src = link.href;
+                lightbox.classList.add("open");
+            });
+        });
+
+        lightbox.addEventListener("click", closeLightbox);
+        window.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                closeLightbox();
+            }
+        });
+    </script>
+</body>
+
+</html>

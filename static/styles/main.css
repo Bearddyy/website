@@ -266,3 +266,87 @@ b {
   font-size: 12px;
   color: var(--muted);
 }
+
+/* Photography page: two-column grid, seen-history controls, fullscreen
+   lightbox. The controls float top-right, opposite the fixed logo rail. */
+.photo_grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2vw;
+  align-items: start;
+  width: min(100%, var(--content-max));
+}
+
+.photo_link {
+  display: block;
+}
+
+.photo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Thin rule between the unseen photos and the seen archive, labelled in the
+   faint bright-black the theme uses for secondary text. */
+.photo_divider {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  color: var(--muted);
+  font-weight: Bold;
+  font-size: clamp(11px, 1.05vw, 17px);
+}
+
+.photo_divider::before,
+.photo_divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--muted);
+}
+
+.photo_controls {
+  position: fixed;
+  z-index: 999;
+  top: var(--pad-top);
+  right: var(--pad-x);
+  display: flex;
+  gap: 0.6em;
+}
+
+.photo_button {
+  font-family: var(--font-body);
+  font-weight: Bold;
+  font-size: clamp(11px, 1.05vw, 17px);
+  color: var(--accent-dark);
+  border: 1px solid var(--accent-dark);
+  padding: 0.35em 0.9em;
+  cursor: pointer;
+}
+
+.photo_button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox.open {
+  display: flex;
+}
+
+.lightbox_img {
+  max-width: 100vw;
+  max-height: 100vh;
+  width: auto;
+  height: auto;
+  cursor: zoom-out;
+}
