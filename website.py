@@ -276,6 +276,22 @@ def tithe_map_app() -> ResponseReturnValue:
     )
 
 
+@app.route("/projects/tithe-map/interactive_map_full.jpg")
+def tithe_map_full() -> ResponseReturnValue:
+    """Serve the full-resolution map scan the viewer lazy-loads.
+
+    The viewer embeds a half-scale scan for the zoomed-out overview and
+    swaps to this full-size file once the user zooms in past 0.5x, so
+    labels stay sharp at max zoom. Long cache: the file only changes when
+    the viewer is regenerated.
+    """
+    return send_from_directory(
+        os.path.join(app.root_path, "pages"),
+        "interactive_map_full.jpg",
+        max_age=86400,
+    )
+
+
 @app.route("/ascention")
 def ascention() -> ResponseReturnValue:
     """Serve the ascention page."""
