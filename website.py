@@ -23,6 +23,12 @@ from plotly.io import to_html
 
 app = Flask(__name__)
 
+# Cache-buster appended to the stylesheet URL as ?v=. Bump this whenever
+# static/styles/main.css changes so browsers (notably Chrome on Android,
+# which aggressively reuses cached CSS on reload) fetch the new file.
+CSS_VERSION = "2"
+app.jinja_env.globals["css_version"] = CSS_VERSION
+
 FONT_PATH = "https://fonts.googleapis.com/css?family=Electrolize|Libre+Barcode+39+Text&display=swap"
 
 # Chart theme, kept in sync with the --bg/--fg/--accent/--muted tokens in
@@ -272,7 +278,7 @@ def tithe_map_app() -> ResponseReturnValue:
     return send_from_directory(
         os.path.join(app.root_path, "pages"),
         "tithe-map-app.html",
-        max_age=86400,
+        max_age=300,
     )
 
 
