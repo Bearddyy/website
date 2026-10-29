@@ -1,8 +1,9 @@
 :root {
   /* Fixed left rail (logo above, nav below). The article column is cleared
-     by the body padding, so pages need no per-page left offsets. */
-  --rail-w: clamp(180px, 20vw, 300px);
-  --pad-x: 3vw;
+     by the body padding, so pages need no per-page left offsets. Rail width
+     and gutter kept slim so the nav hugs the content column. */
+  --rail-w: clamp(150px, 15vw, 240px);
+  --pad-x: 2.5vw;
   --pad-top: 4vh;
   --logo-h: min(6vh, 4vw);
   --content-max: 1200px;

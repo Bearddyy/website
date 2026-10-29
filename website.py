@@ -26,7 +26,7 @@ app = Flask(__name__)
 # Cache-buster appended to the stylesheet URL as ?v=. Bump this whenever
 # static/styles/main.css changes so browsers (notably Chrome on Android,
 # which aggressively reuses cached CSS on reload) fetch the new file.
-CSS_VERSION = "2"
+CSS_VERSION = "5"
 app.jinja_env.globals["css_version"] = CSS_VERSION
 
 FONT_PATH = "https://fonts.googleapis.com/css?family=Electrolize|Libre+Barcode+39+Text&display=swap"
